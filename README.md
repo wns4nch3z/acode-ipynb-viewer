@@ -1,7 +1,7 @@
 # Acode IPYNB Viewer
 
 A simple Jupyter notebook (`.ipynb`) viewer, with basic editing, for the [Acode](https://github.com/Acode-Foundation/Acode) editor.
-Plugin id: `com.wnsanchez.ipynb-viewer`. License: MIT.
+Plugin id: `com.wnsanchez.ipynb_viewer`. License: MIT.
 
 Features: code cells with syntax highlighting, markdown, LaTeX (KaTeX), saved outputs (text, images, HTML, errors),
 light/dark theme following Acode, relative images and links, sanitized HTML (DOMPurify), fully offline.
