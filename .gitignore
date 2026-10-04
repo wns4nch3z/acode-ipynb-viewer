@@ -1,0 +1,4 @@
+pkg/main.js
+*.zip
+node_modules/
+.DS_Store
