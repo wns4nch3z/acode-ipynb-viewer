@@ -1,6 +1,6 @@
 'use strict';
 
-const PLUGIN_ID = 'com.wnsanchez.ipynb-viewer';
+const PLUGIN_ID = 'com.wnsanchez.ipynb_viewer';
 const PLUGIN_BUILD = 'b6.3';
 
 // Rutas locales dentro del zip del plugin (se resuelven con el baseUrl que entrega Acode).
