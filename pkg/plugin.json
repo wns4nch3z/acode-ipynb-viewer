@@ -1,0 +1,29 @@
+{
+  "id": "com.wnsanchez.ipynb-viewer",
+  "name": "IPYNB Viewer",
+  "version": "2.0.3",
+  "main": "main.js",
+  "readme": "readme.md",
+  "icon": "icon.png",
+  "files": [
+    "changelogs.md"
+  ],
+  "minVersionCode": 1011,
+  "price": 0,
+  "license": "MIT",
+  "keywords": [
+    "ipynb",
+    "jupyter",
+    "notebook",
+    "viewer",
+    "python",
+    "markdown",
+    "latex"
+  ],
+  "changelogs": "changelogs.md",
+  "author": {
+    "name": "wnsanchez",
+    "github": "wns4nch3z"
+  },
+  "repository": "https://github.com/wns4nch3z/acode-ipynb-viewer"
+}
