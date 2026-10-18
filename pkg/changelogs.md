@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.0.4
+- Added the command "IPYNB Viewer: open demo notebook" (command palette) to try the viewer without any file.
+- The demo notebook opens by itself the first time after install.
+- Readme now starts with usage instructions.
+
 ## 2.0.3
 - Interface in English.
 - Improved saving: button disabled while saving, clear error message, Jupyter-style JSON formatting.
