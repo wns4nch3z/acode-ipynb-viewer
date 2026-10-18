@@ -2,6 +2,15 @@
 
 A simple viewer (with basic editing) for Jupyter notebooks (`.ipynb`) in Acode.
 
+## How to use
+
+1. Install the plugin. A demo notebook opens by itself the first time, so you can see how it looks right away.
+2. Open any `.ipynb` file from the file browser. It opens in its own tab.
+3. To see the demo again: tap the menu (⋮) → **Command palette** → **IPYNB Viewer: open demo notebook**.
+4. Tap **Edit** to change cells, then **Save**.
+
+After that first demo, the plugin stays quiet until you open a `.ipynb` file.
+
 ## Features
 
 - Renders code cells (with syntax highlighting), markdown, LaTeX formulas and saved outputs: text, images, HTML and errors.
