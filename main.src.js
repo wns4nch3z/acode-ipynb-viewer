@@ -1,7 +1,7 @@
 'use strict';
 
 const PLUGIN_ID = 'com.wnsanchez.ipynb_viewer';
-const PLUGIN_BUILD = 'b6.3';
+const PLUGIN_BUILD = 'b6.6';
 
 // Rutas locales dentro del zip del plugin (se resuelven con el baseUrl que entrega Acode).
 // Las URLs del CDN de abajo quedan solo como respaldo.
@@ -792,6 +792,50 @@ function onLinkClick(e, notebookUri) {
   });
 }
 
+
+// ─────────────────────────────────────────────────────────────
+// NOTEBOOK DE DEMOSTRACIÓN (comando "IPYNB Viewer: open demo notebook")
+// ─────────────────────────────────────────────────────────────
+// Permite ver que el plugin funciona sin necesitar ningún archivo .ipynb.
+const DEMO_NOTEBOOK = {
+  nbformat: 4,
+  nbformat_minor: 5,
+  metadata: { kernelspec: { name: 'python3', display_name: 'Python 3' }, language_info: { name: 'python' } },
+  cells: [
+    { cell_type: 'markdown', metadata: {}, source: [
+      '# IPYNB Viewer demo\n',
+      '\n',
+      'This is a **built-in demo notebook**. If you can read this, the plugin works.\n',
+      '\n',
+      '- Markdown with *emphasis*, `inline code` and [links](https://github.com/Acode-Foundation/Acode)\n',
+      '- LaTeX formulas: $E = mc^2$\n',
+      '- Code cells with syntax highlighting and saved outputs\n',
+      '\n',
+      '$$\\int_0^1 x^2\\,dx = \\frac{1}{3}$$'
+    ] },
+    { cell_type: 'code', execution_count: 1, metadata: {}, source: [
+      'import numpy as np\n',
+      'x = np.linspace(0, 1, 5)\n',
+      'print("squares:", x ** 2)'
+    ], outputs: [
+      { output_type: 'stream', name: 'stdout', text: ['squares: [0.     0.0625 0.25   0.5625 1.    ]\n'] }
+    ] },
+    { cell_type: 'code', execution_count: 2, metadata: {}, source: [
+      'import pandas as pd\n',
+      'pd.DataFrame({"name": ["a", "b"], "value": [1, 2]})'
+    ], outputs: [
+      { output_type: 'execute_result', execution_count: 2, metadata: {}, data: {
+        'text/html': ['<table><thead><tr><th></th><th>name</th><th>value</th></tr></thead><tbody><tr><th>0</th><td>a</td><td>1</td></tr><tr><th>1</th><td>b</td><td>2</td></tr></tbody></table>'],
+        'text/plain': ['  name  value\n0    a      1\n1    b      2']
+      } }
+    ] },
+    { cell_type: 'code', execution_count: 3, metadata: {}, source: ['# an image output (four colour bands)'], outputs: [
+      { output_type: 'display_data', metadata: {}, data: { 'image/png': 'iVBORw0KGgoAAAANSUhEUgAAAIwAAAA4CAIAAACg+YcKAAAApUlEQVR42u3csQ2AIABEUTaxsKGksnQGNmEHCuKWDmDjCCwBxMSX/Anu9RdiTPp4wQSQNBRpK8+C9nbM7r3OBdV8zw4SJEiQIEGCBAkSJEiQIEGCBAkSJEiQIEGCBAkSJEiQIEGCBAkSJEiQIEGCBAkSJEiQIEGCBAkSJEiQIEGCBAkSJEiQIEGCBAkSJEiQIEGCBAkSJEiQIEGCBMl/pg9WQfpFHWiH5IarGXRrAAAAAElFTkSuQmCC', 'text/plain': ['<Figure>'] } }
+    ] },
+    { cell_type: 'markdown', metadata: {}, source: ['To open your own notebook, tap any `.ipynb` file in the file browser.'] }
+  ]
+};
+
 const plugin = {
   async init(baseUrl) {
     PLUGIN_BASE = normalizeBase(baseUrl);
@@ -856,7 +900,7 @@ const plugin = {
 
         var cellsEl = document.createElement('div');
         cellsEl.className = 'ipynb-cells';
-        cellsEl.dataset.uri = fileInfo.uri;
+        cellsEl.dataset.uri = fileInfo.uri || '';
         var container = document.createElement('div');
         container.className = 'ipynb-page';
         container.appendChild(cellsEl);
@@ -864,7 +908,13 @@ const plugin = {
         watchTheme(container);
 
         container.insertBefore(toolbar, cellsEl);
-        container.addEventListener('click', function (e) { onLinkClick(e, fileInfo.uri); });
+        if (fileInfo.demoText != null) {
+          // demostración: no hay archivo real, así que no se ofrece editar ni guardar
+          toolbarTitle.textContent = 'Demo notebook';
+          editBtn.style.display = 'none';
+          editBtn.disabled = true;
+        }
+        container.addEventListener('click', function (e) { onLinkClick(e, fileInfo.uri || ''); });
 
         function enterEdit() {
           cellsEl.classList.add('edit-mode');
@@ -946,7 +996,7 @@ const plugin = {
         };
 
         try {
-          var text = await fs(fileInfo.uri).readFile('utf-8');
+          var text = fileInfo.demoText != null ? fileInfo.demoText : await fs(fileInfo.uri).readFile('utf-8');
           notebook = JSON.parse(text);
           notebook.cells = notebook.cells || [];
           if (notebook.cells.length === 0) {
@@ -985,10 +1035,41 @@ const plugin = {
     };
     acode.registerFileHandler(PLUGIN_ID, fileHandler);
     openNotebookRef = fileHandler.handleFile;
+
+    function openDemo() {
+      return fileHandler.handleFile({ name: 'demo.ipynb', demoText: JSON.stringify(DEMO_NOTEBOOK) });
+    }
+
+    try {
+      acode.require('commands').addCommand({
+        name: 'ipynbviewer.openDemo',
+        description: 'IPYNB Viewer: open demo notebook',
+        exec: function () { openDemo(); return true; }
+      });
+    } catch (e) { console.warn('[ipynb-viewer] could not register the demo command', e); }
+
+    // Bienvenida: la primera vez tras instalar se abre solo el notebook de demostración.
+    // Con retraso: durante la instalación/arranque Acode aún tapa la pantalla.
+    var welcomeKey = PLUGIN_ID + '.welcomed';
+    var welcomed = null;
+    try { welcomed = localStorage.getItem(welcomeKey); } catch (e) { /* sin almacenamiento: se muestra siempre */ }
+    if (!welcomed) {
+      try { localStorage.setItem(welcomeKey, '1'); } catch (e) { /* nada */ }
+      setTimeout(function () {
+        try {
+          Promise.resolve(openDemo()).catch(function () {
+            toastMsg('IPYNB Viewer ready: open any .ipynb file', 5000);
+          });
+        } catch (e) {
+          toastMsg('IPYNB Viewer ready: open any .ipynb file', 5000);
+        }
+      }, 2500);
+    }
   },
 
   destroy() {
     acode.unregisterFileHandler(PLUGIN_ID);
+    try { acode.require('commands').removeCommand('ipynbviewer.openDemo'); } catch (e) { /* nada */ }
     var styleEl = document.getElementById(PLUGIN_ID + '-styles');
     if (styleEl) styleEl.remove();
   }
